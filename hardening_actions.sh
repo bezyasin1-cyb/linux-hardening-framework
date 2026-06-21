@@ -1,15 +1,33 @@
-# hardening_actions.sh
+#!/bin/bash
+# ==============================================================================
+# Modul: Sistem Sikalastirma Orkestrasyonu
+# ==============================================================================
+
+# Modulleri yukle
+for mod in "$BASE_DIR"/modules/*.sh; do
+    if [ -f "$mod" ]; then
+        source "$mod"
+    fi
+done
 
 apply_system_hardening() {
-    local LOG=$1
-    echo "[*] Hardening uygulanıyor..." | tee -a "$LOG"
+    log_info "Sistem genelinde sikalastirma adimlari baslatiliyor..."
 
-    # Örnek 1: Root girişini kapat (Audit kısmında kontrol ettiğin şeyi burada uygula)
-    sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-    systemctl restart ssh
-    echo "[+] Root girişi devre dışı bırakıldı." | tee -a "$LOG"
+    if declare -f apply_ssh_hardening > /dev/null; then
+        apply_ssh_hardening
+    fi
 
-    # Örnek 2: Gereksiz servisleri durdur
-    # systemctl stop avahi-daemon && systemctl disable avahi-daemon
-    echo "[+] Gereksiz servisler durduruldu." | tee -a "$LOG"
+    if declare -f apply_sysctl_hardening > /dev/null; then
+        apply_sysctl_hardening
+    fi
+
+    if declare -f apply_auth_hardening > /dev/null; then
+        apply_auth_hardening
+    fi
+
+    if declare -f apply_firewall_hardening > /dev/null; then
+        apply_firewall_hardening
+    fi
+
+    log_success "Tum sikalastirma modulleri uygulandi."
 }
